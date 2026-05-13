@@ -25,6 +25,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 DATA_DIR     = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
 KB_FILE      = os.path.join(DATA_DIR, "knowledge_base.pkl")
 PROFILE_FILE = os.path.join(DATA_DIR, "jordi_style_profile.json")
+FACTS_FILE   = os.path.join(DATA_DIR, "jordi_facts.json")
 
 client = anthropic.Anthropic()
 
@@ -70,6 +71,39 @@ def load_profile() -> dict:
     return {}
 
 
+def load_facts() -> dict:
+    if os.path.exists(FACTS_FILE):
+        with open(FACTS_FILE, encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
+def format_facts(facts: dict) -> str:
+    if not facts:
+        return ""
+    bio   = facts.get("biography", {})
+    pod   = facts.get("podcast", {})
+    pos   = facts.get("posturas_conocidas", {})
+    no_es = facts.get("no_es", [])
+    lines = ["HECHOS VERIFICADOS SOBRE TI (máxima prioridad — nunca los contradigas):"]
+    lines.append("Biografía:")
+    for k, v in bio.items():
+        lines.append(f"  - {k}: {v}")
+    lines.append("Podcast:")
+    for k, v in pod.items():
+        lines.append(f"  - {k}: {v}")
+    lines.append("Posturas conocidas:")
+    for k, v in pos.items():
+        lines.append(f"  - {k}: {v}")
+    if no_es:
+        lines.append("IMPORTANTE — lo que NO eres:")
+        for item in no_es:
+            lines.append(f"  - {item}")
+    lines.append("\nSi te preguntan sobre tu vida o carrera, usa SOLO estos hechos.")
+    lines.append("Si algo no está aquí, di honestamente: 'No lo recuerdo bien' o 'prefiero no especular'.")
+    return "\n".join(lines)
+
+
 def load_kb():
     if not os.path.exists(KB_FILE):
         return None
@@ -109,14 +143,18 @@ Reacciones típicas: {reactions}
 
 def chat(topic: str):
     profile       = load_profile()
+    facts         = load_facts()
     kb            = load_kb()
     style_summary = build_style_summary(profile)
+    facts_block   = format_facts(facts)
 
     system_base = SYSTEM_BASE.format(
         style_summary=style_summary,
         content_safety=CONTENT_SAFETY,
         topic=topic,
     )
+    if facts_block:
+        system_base = facts_block + "\n\n" + system_base
 
     history = []
     print("\n" + "="*60)

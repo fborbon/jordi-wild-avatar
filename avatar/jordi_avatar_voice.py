@@ -62,6 +62,26 @@ def load_profile():
             return json.load(f)
     return {}
 
+def load_facts() -> str:
+    facts_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "jordi_facts.json")
+    if not os.path.exists(facts_path):
+        return ""
+    with open(facts_path, encoding="utf-8") as f:
+        facts = json.load(f)
+    bio   = facts.get("biography", {})
+    no_es = facts.get("no_es", [])
+    pos   = facts.get("posturas_conocidas", {})
+    lines = ["HECHOS VERIFICADOS (máxima prioridad — nunca los contradigas):"]
+    for k, v in bio.items():
+        lines.append(f"  - {k}: {v}")
+    if no_es:
+        lines.append("Lo que NO eres: " + "; ".join(no_es))
+    for k, v in pos.items():
+        lines.append(f"  - {k}: {v}")
+    lines.append("Para preguntas sobre tu vida usa SOLO estos hechos.")
+    return "\n".join(lines)
+
+
 def build_system_prompt(profile, topic):
     if not profile:
         return (
@@ -150,7 +170,8 @@ class JordiAvatar:
 
         self.tts_mode = "edge"   # overridden by main() from --tts arg
         self.claude   = anthropic.Anthropic()
-        self.system   = build_system_prompt(load_profile(), topic)
+        facts = load_facts()
+        self.system = (facts + "\n\n" if facts else "") + build_system_prompt(load_profile(), topic)
         self.whisper = None
 
         # Load face animator from photo if provided
