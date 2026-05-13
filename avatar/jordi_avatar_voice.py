@@ -190,8 +190,8 @@ class JordiAvatar:
         threading.Thread(target=self._load_models, daemon=True).start()
 
     def _load_models(self):
-        self.loading_msg = "Cargando Whisper..."
-        self.whisper = WhisperModel("tiny", device="cpu", compute_type="int8")
+        self.loading_msg = "Cargando Whisper base..."
+        self.whisper = WhisperModel("base", device="cpu", compute_type="int8")
 
         if self.tts_mode == "xtts":
             self.loading_msg = "Cargando XTTS v2 (~1.8 GB, solo la primera vez)..."
@@ -272,7 +272,13 @@ class JordiAvatar:
             audio = audio / peak * 0.5
         wavfile.write(tmp.name, SAMPLE_RATE, (audio * 32767).astype(np.int16))
         try:
-            segs, _ = self.whisper.transcribe(tmp.name, language="es")
+            segs, _ = self.whisper.transcribe(
+                tmp.name,
+                language="es",
+                task="transcribe",
+                beam_size=5,
+                vad_filter=True,
+            )
             user_text = " ".join(s.text for s in segs).strip()
         finally:
             os.unlink(tmp.name)
