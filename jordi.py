@@ -14,7 +14,7 @@ Usage:
   python3 jordi.py --mode videocall --photo jordi_cartoon.png
 """
 
-import os, sys, argparse, subprocess
+import os, sys, argparse
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 
@@ -102,34 +102,32 @@ def launch(mode: str, topic: str, photo: str | None):
         print(f"⚠  {info['warning']}")
     print()
 
-    env = os.environ.copy()
+    # Import and call directly — avoids subprocess environment issues
+    sys.path.insert(0, BASE)
+    sys.argv = ["jordi"]   # reset so argparse in submodules doesn't see our args
 
     if mode == "chatbot":
-        subprocess.run(
-            [sys.executable, os.path.join(BASE, "avatar", "jordi_chat.py"),
-             "--topic", topic],
-            env=env,
+        sys.argv += ["--topic", topic]
+        from avatar.jordi_chat import chat
+        chat(topic=topic)
+
+    else:
+        tts = "xtts" if mode == "callHQ" else "edge"
+        if mode == "videocall":
+            photo = photo or DEFAULT_PHOTO
+        args_list = ["--topic", topic, "--tts", tts]
+        if photo:
+            args_list += ["--photo", photo]
+        # Patch sys.argv so argparse in jordi_avatar_voice picks up the right values
+        sys.argv = ["jordi_avatar_voice"] + args_list
+        import importlib.util, types
+        spec = importlib.util.spec_from_file_location(
+            "jordi_avatar_voice",
+            os.path.join(BASE, "avatar", "jordi_avatar_voice.py")
         )
-
-    elif mode == "callLQ":
-        cmd = [sys.executable, os.path.join(BASE, "avatar", "jordi_avatar_voice.py"),
-               "--topic", topic, "--tts", "edge"]
-        if photo:
-            cmd += ["--photo", photo]
-        subprocess.run(cmd, env=env)
-
-    elif mode == "callHQ":
-        cmd = [sys.executable, os.path.join(BASE, "avatar", "jordi_avatar_voice.py"),
-               "--topic", topic, "--tts", "xtts"]
-        if photo:
-            cmd += ["--photo", photo]
-        subprocess.run(cmd, env=env)
-
-    elif mode == "videocall":
-        photo = photo or DEFAULT_PHOTO
-        cmd = [sys.executable, os.path.join(BASE, "avatar", "jordi_avatar_voice.py"),
-               "--topic", topic, "--tts", "edge", "--photo", photo]
-        subprocess.run(cmd, env=env)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod.main()
 
 
 def main():
