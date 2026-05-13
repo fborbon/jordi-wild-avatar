@@ -200,7 +200,14 @@ class JordiAvatar:
         self.whisper = WhisperModel("base", device="cpu", compute_type="int8")
 
         if self.tts_mode == "xtts":
-            self.loading_msg = "Cargando XTTS v2 (~1.8 GB, solo la primera vez)..."
+            from TTS.utils.manage import ModelManager
+            import os
+            model_dir = os.path.join(os.path.expanduser("~"), ".local", "share", "tts",
+                                     "tts_models--multilingual--multi-dataset--xtts_v2")
+            if os.path.exists(os.path.join(model_dir, "model.pth")):
+                self.loading_msg = "Cargando XTTS v2 desde caché (~15s)..."
+            else:
+                self.loading_msg = "Descargando XTTS v2 por primera vez (~1.8 GB)..."
             synth_tts(".", mode="xtts")   # warm up — loads model into _xtts_model
 
         self.loading_msg  = ""
