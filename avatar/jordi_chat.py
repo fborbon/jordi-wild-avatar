@@ -8,7 +8,6 @@ Usage:
 """
 
 import os, sys, json, re, pickle, argparse
-import numpy as np
 
 # Load .env
 _env = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")

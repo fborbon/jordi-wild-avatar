@@ -339,7 +339,6 @@ Wild_project/
 ├── avatar/
 │   ├── jordi_chat.py             # Text chatbot with RAG
 │   ├── jordi_avatar_voice.py     # Voice avatar (callLQ / callHQ / videocall)
-│   ├── jordi_avatar.py           # Legacy text avatar
 │   └── face_animator.py          # dlib landmark → real-time face animation
 │
 ├── subtitles/
