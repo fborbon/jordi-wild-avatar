@@ -119,21 +119,25 @@ def wrap(text, font, max_w):
     if cur: lines.append(cur)
     return lines
 
+_xtts_model = None   # loaded once, reused across all synthesis calls
+
 def synth_tts(text: str, mode: str = "edge") -> str:
     """Synthesize text, return path to wav file. mode: 'edge' or 'xtts'."""
+    global _xtts_model
     clean = re.sub(r"\*[^*]+\*", "", text)
     clean = re.sub(r"\s+", " ", clean).strip()
 
     if mode == "xtts":
         from TTS.api import TTS as CoquiTTS
         voice_sample = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "jordi_voice_sample.wav")
+        if _xtts_model is None:
+            _xtts_model = CoquiTTS("tts_models/multilingual/multi-dataset/xtts_v2", gpu=False)
         tmp = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
         tmp.close()
-        tts = CoquiTTS("tts_models/multilingual/multi-dataset/xtts_v2", gpu=False)
         if os.path.exists(voice_sample):
-            tts.tts_to_file(text=clean, speaker_wav=voice_sample, language="es", file_path=tmp.name)
+            _xtts_model.tts_to_file(text=clean, speaker_wav=voice_sample, language="es", file_path=tmp.name)
         else:
-            tts.tts_to_file(text=clean, file_path=tmp.name)
+            _xtts_model.tts_to_file(text=clean, file_path=tmp.name)
         return tmp.name
 
     # Default: edge-tts
@@ -186,7 +190,13 @@ class JordiAvatar:
         threading.Thread(target=self._load_models, daemon=True).start()
 
     def _load_models(self):
+        self.loading_msg = "Cargando Whisper..."
         self.whisper = WhisperModel("tiny", device="cpu", compute_type="int8")
+
+        if self.tts_mode == "xtts":
+            self.loading_msg = "Cargando XTTS v2 (~1.8 GB, solo la primera vez)..."
+            synth_tts(".", mode="xtts")   # warm up — loads model into _xtts_model
+
         self.loading_msg  = ""
         self.models_ready = True
         threading.Thread(target=self._jordi_open, daemon=True).start()
