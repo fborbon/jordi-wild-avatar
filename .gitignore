@@ -1,0 +1,48 @@
+# Environment & secrets
+.env
+
+# Large data directories (regenerate with pipeline scripts)
+subtitles/
+transcripts/
+
+# Large binary/model files
+data/knowledge_base.pkl
+data/jordi_raw.mp3
+data/jordi_voice_sample.wav
+data/shape_predictor_68_face_landmarks.dat
+
+# Personal photos (provide your own)
+jordi.jpeg
+jordi_cartoon.png
+jordi_cartoon_preview.png
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+/tmp/
+
+# What IS committed:
+# - All .py and .sh scripts
+# - README.md
+# - data/jordi_lines.txt       (~4.7MB, extracted Jordi speech)
+# - data/jordi_style_profile.json  (6.5KB, style config)
+# - data/book_summary.txt      (7.9KB, Wikipedia cache)
