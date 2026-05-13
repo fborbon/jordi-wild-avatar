@@ -7,7 +7,11 @@ Usage:
   python3 avatar/jordi_chat.py --topic "inteligencia artificial"
 """
 
-import os, sys, json, re, pickle, argparse
+import os, sys, site, json, re, pickle, argparse
+
+_user_site = site.getusersitepackages()
+if _user_site not in sys.path:
+    sys.path.insert(0, _user_site)
 
 # Load .env
 _env = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")

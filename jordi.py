@@ -14,7 +14,12 @@ Usage:
   python3 jordi.py --mode videocall --photo jordi_cartoon.png
 """
 
-import os, sys, argparse
+import os, sys, argparse, site
+
+# Ensure user site-packages are on sys.path even inside a virtual environment
+_user_site = site.getusersitepackages()
+if _user_site not in sys.path:
+    sys.path.insert(0, _user_site)
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 

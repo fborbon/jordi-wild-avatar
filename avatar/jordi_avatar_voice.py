@@ -14,7 +14,13 @@ Usage:
   python3 avatar/jordi_avatar_voice.py --topic "deporte" --photo jordi.jpeg
 """
 
-import os, sys, json, time, re, tempfile, threading, argparse, asyncio
+import os, sys, site, json, time, re, tempfile, threading, argparse, asyncio
+
+# Ensure user site-packages are visible even inside a virtual environment
+_user_site = site.getusersitepackages()
+if _user_site not in sys.path:
+    sys.path.insert(0, _user_site)
+
 import numpy as np
 import pygame
 import cv2
