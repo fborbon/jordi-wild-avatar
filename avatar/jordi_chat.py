@@ -177,7 +177,7 @@ def chat(topic: str):
 
     history.append({"role": "user", "content": "[El invitado entra al estudio.]"})
     r = client.messages.create(
-        model="claude-sonnet-4-6", max_tokens=350,
+        model="claude-sonnet-4-6", max_tokens=600,
         system=system_base + opening_context,
         messages=history,
     )
@@ -205,7 +205,7 @@ def chat(topic: str):
 
         history.append({"role": "user", "content": user_input})
         r = client.messages.create(
-            model="claude-sonnet-4-6", max_tokens=400,
+            model="claude-sonnet-4-6", max_tokens=600,
             system=system_base + rag_context,
             messages=history,
         )
