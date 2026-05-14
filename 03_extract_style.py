@@ -9,6 +9,7 @@ Requires: ANTHROPIC_API_KEY env var
 """
 
 import os
+import re
 import json
 import glob
 import random
@@ -104,7 +105,10 @@ def build_style_profile(all_jordi_lines: list[str]) -> dict:
 
 
 def main():
-    txt_files = sorted(glob.glob(os.path.join(TRANSCRIPTS_DIR, "*.txt")))
+    txt_files = sorted(
+        glob.glob(os.path.join(TRANSCRIPTS_DIR, "*.txt")) +
+        glob.glob(os.path.join(TRANSCRIPTS_DIR, "**", "*.txt"))
+    )
     if not txt_files:
         print(f"No transcripts found in {TRANSCRIPTS_DIR}/. Run 02_parse_transcripts.py first.")
         return

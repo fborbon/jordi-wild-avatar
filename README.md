@@ -39,7 +39,7 @@ python3 jordi.py --mode videocall --photo jordi_cartoon.png
 ```mermaid
 flowchart TD
     subgraph INPUT["Data Sources"]
-        A1["YouTube\nPodcast Playlist\n(387 episodes)"]
+        A1["YouTube\nPodcast Playlist\n(388 episodes)"]
         A2["YouTube\nTertulias Playlist\n(135 episodes)"]
         A3["YouTube\nInterviews\n(2 videos)"]
         A4["Wikipedia\nBook summary"]
@@ -59,9 +59,9 @@ flowchart TD
     subgraph EXTRACT["Step 3 — Knowledge Extraction"]
         D1["06_build_knowledge_base.py\nHeuristic diarization"]
         D2["03_extract_style.py\nClaude API — one-time"]
-        D3["jordi_lines.txt\n~16 000 Jordi turns"]
+        D3["jordi_lines.txt\n~18 000 Jordi turns"]
         D4["jordi_style_profile.json\nvocabulary · reactions · patterns"]
-        D5["knowledge_base.pkl\nTF-IDF RAG index\n16 300 entries"]
+        D5["knowledge_base.pkl\nTF-IDF RAG index\n18 066 entries"]
         D6["book_summary.txt\nWikipedia"]
     end
 
@@ -131,7 +131,7 @@ YouTube auto-captions accumulate words incrementally within each utterance, prod
 #### Step 3 — Knowledge Extraction
 Two parallel processes:
 
-- **Heuristic diarization** (`06_build_knowledge_base.py`): Extracts Jordi's turns from transcripts using rule-based matching — questions ending in `?`, short reactions (`ajá`, `guau`, `claro`…), and known interviewer openers. Processes all 367 transcripts in seconds, zero API calls. Produces ~16,000 Jordi lines which are indexed into a TF-IDF knowledge base for RAG retrieval.
+- **Heuristic diarization** (`06_build_knowledge_base.py`): Extracts Jordi's turns from transcripts using rule-based matching — questions ending in `?`, short reactions (`ajá`, `guau`, `claro`…), and known interviewer openers. Processes all 381 transcripts in seconds, zero API calls. Produces ~18,050 Jordi lines which are indexed into a TF-IDF knowledge base for RAG retrieval.
 
 - **Style profile** (`03_extract_style.py`): A one-time Claude API call on a sample of episodes produces `jordi_style_profile.json` — vocabulary, reaction patterns, challenge strategies, humor style, sample questions. This is the only step that requires the Claude API for data processing.
 
@@ -176,7 +176,7 @@ Every conversation turn follows this sequence:
 
 | Library | Role |
 |---------|------|
-| **scikit-learn** `TfidfVectorizer` | Builds the retrieval index from 16 300 Jordi quotes |
+| **scikit-learn** `TfidfVectorizer` | Builds the retrieval index from 18 066 Jordi quotes |
 | **scikit-learn** `cosine_similarity` | Ranks retrieved quotes by relevance to the user's message |
 | **pickle** | Serializes the TF-IDF matrix for fast loading |
 
@@ -289,11 +289,11 @@ Every conversation turn follows this sequence:
 | **Vocabulary** | 20 000 features |
 | **N-grams** | Unigrams + bigrams `(1, 2)` |
 | **Accent handling** | `strip_accents="unicode"` |
-| **Corpus size** | 16 300 entries (~16 000 Jordi lines + Wikipedia chunks) |
+| **Corpus size** | 18 066 entries (~18 050 Jordi lines + Wikipedia chunks) |
 | **Similarity metric** | Cosine similarity |
 | **Retrieved per query** | Top-6 (threshold > 0.05) |
 
-**Why chosen:** TF-IDF has zero inference cost (pure matrix multiplication), requires no GPU, no API calls, and no neural embedding model. For a retrieval corpus of ~16 k short Spanish sentences, keyword overlap is sufficient to surface relevant quotes. A neural embedding model (e.g. `sentence-transformers`) would handle paraphrases better but adds ~400 MB and GPU dependency — unnecessary given the corpus characteristics.
+**Why chosen:** TF-IDF has zero inference cost (pure matrix multiplication), requires no GPU, no API calls, and no neural embedding model. For a retrieval corpus of ~18 k short Spanish sentences, keyword overlap is sufficient to surface relevant quotes. A neural embedding model (e.g. `sentence-transformers`) would handle paraphrases better but adds ~400 MB and GPU dependency — unnecessary given the corpus characteristics.
 
 **Configuration rationale:**
 - `ngram_range=(1,2)`: Bigrams capture collocations like `"o sea"`, `"me parece"`, `"tío tío"` that are distinctive of Jordi's speech
@@ -342,18 +342,18 @@ Wild_project/
 │   └── face_animator.py          # dlib landmark → real-time face animation
 │
 ├── subtitles/
-│   ├── Podcast/                  # 254 .vtt files
-│   ├── Tertulias/                # 109 .vtt files
+│   ├── Podcast/                  # 257 .vtt files
+│   ├── Tertulias/                # 124 .vtt files
 │   └── Interviews/               # 2 .vtt files
 │
 ├── transcripts/
-│   ├── Podcast/                  # 254 .txt files
-│   ├── Tertulias/                # 109 .txt files
+│   ├── Podcast/                  # 257 .txt files
+│   ├── Tertulias/                # 124 .txt files
 │   └── Interviews/               # 2 .txt files
 │
 └── data/
     ├── jordi_style_profile.json  # Vocabulary, reactions, patterns
-    ├── jordi_lines.txt           # ~16 000 extracted Jordi turns
+    ├── jordi_lines.txt           # ~18 050 extracted Jordi turns
     ├── knowledge_base.pkl        # TF-IDF matrix + vectorizer
     ├── book_summary.txt          # Wikipedia: Así es la puta vida
     └── jordi_voice_sample.wav    # 45s reference audio for XTTS v2
@@ -379,7 +379,7 @@ pip install yt-dlp webvtt-py anthropic faster-whisper edge-tts \
 echo "ANTHROPIC_API_KEY=sk-ant-..." > .env
 
 # 5. Run the full data pipeline (one-time, ~5 min)
-./01_download_subtitles.sh          # ~10 min, downloads 367 subtitle files
+./01_download_subtitles.sh          # ~10 min, downloads 383 subtitle files
 python3 02_parse_transcripts.py     # ~1 min, cleans all transcripts
 python3 06_build_knowledge_base.py  # ~5 s, builds RAG index
 python3 03_extract_style.py         # ~2 min, Claude API (one-time cost ~$0.10)
