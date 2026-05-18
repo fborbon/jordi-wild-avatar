@@ -1,6 +1,23 @@
 # The Wild Project — Jordi Wild Avatar
 
-A conversational AI avatar of Jordi Wild, host of *The Wild Project* podcast. Built entirely from his public podcast transcripts, it can hold interviews in his style via text, voice, or animated video.
+A conversational AI avatar of **Jordi Wild**, host of *The Wild Project* podcast, built entirely from his public podcast transcripts. The system extracts ~18 000 real Jordi speech turns from 381 YouTube subtitle files, indexes them with TF-IDF for Retrieval-Augmented Generation (RAG), and uses Claude Sonnet to generate responses grounded in his actual vocabulary, humor style, and conversation patterns. Available in four interaction modes: text chatbot, low-latency voice call (Microsoft Azure neural TTS), high-quality voice call with voice cloning (XTTS v2), and animated video call with real-time dlib face animation driven by audio amplitude.
+
+**Main technologies:** Python · Anthropic API (Claude Sonnet) · RAG via scikit-learn TF-IDF · faster-whisper (speech-to-text) · XTTS v2 / edge-tts (voice cloning & TTS) · dlib + OpenCV (face animation) · yt-dlp
+
+**Monthly cost:** Minimal. One-time setup cost is ~$0.10 (a single Claude API call to extract the style profile). Ongoing cost is ~$0.01 per conversation turn (one Claude Sonnet call at ~2 000 input + 300 output tokens). For casual use (a few dozen conversations per month) expect **under $1/month**. Speech recognition (faster-whisper) and face animation run fully locally at no cost.
+
+---
+
+## Table of Contents
+
+1. [Quick Start](#quick-start)
+2. [Interaction Modes](#interaction-modes)
+3. [Data Processing Pipeline](#data-processing-pipeline)
+4. [Libraries & AI Technologies](#libraries--ai-technologies)
+5. [ML Models](#ml-models)
+6. [Project Structure](#project-structure)
+7. [Setup](#setup)
+8. [Hardware Notes](#hardware-notes)
 
 ---
 
@@ -405,3 +422,33 @@ python3 jordi.py
 | Internet | Required for `chatbot`/`callLQ` (Claude + edge-tts) | — |
 
 The project was built and tested on an AMD Ryzen with integrated Radeon Vega GPU (no CUDA). All ML inference runs on CPU.
+
+---
+
+## Auditing
+
+This section provides a structured checklist for review by an IT expert and an AI / NLP / ethics subject-matter expert.
+
+### Audit Items
+
+- **Cost & resource minimization** — Under $1/month for casual use (~a few dozen conversations). One-time setup cost is ~$0.10 (single Claude API call for style extraction). Speech recognition (faster-whisper), face animation (dlib), and the TF-IDF knowledge base run locally at $0.
+- **IT architecture** — Clean two-part structure: offline data pipeline (5 numbered scripts) and runtime (`jordi.py` + `avatar/`). The four interaction modes share the same RAG + Claude generation core, with only the I/O layer differing. The offline pipeline produces reusable artifacts (pickled TF-IDF index, style profile JSON, voice sample WAV) that eliminate redundant processing at runtime.
+- **Code efficiency** — TF-IDF knowledge base is pre-built and pickled, enabling fast cold-start. `faster-whisper` tiny/int8 quantization is the right tradeoff for real-time STT on CPU (~2s latency for a 5s utterance). XTTS v2 is slow on CPU (20–30s per response) — documented as a known limitation requiring GPU for `callHQ` mode.
+- **Cybersecurity** — `ANTHROPIC_API_KEY` is stored in `.env` and not committed. Only subtitle files are downloaded (no video). No PII is collected or transmitted. A content safety policy is injected into the system prompt. No moderation log is stored for generated outputs.
+- **Readability & maintainability** — The end-to-end Mermaid pipeline diagram is among the most comprehensive in the portfolio. The step-by-step setup (6 numbered steps) is fully reproducible. Each interaction mode's latency and capability trade-offs are clearly documented.
+- **AI / ML model adequacy** — `faster-whisper tiny` is appropriate for real-time Spanish STT. XTTS v2 is state-of-the-art open-source zero-shot voice cloning. Claude Sonnet is appropriate for nuanced Spanish conversational generation with style grounding. TF-IDF RAG (top-6 quotes, threshold > 0.05) reduces hallucination by anchoring responses to real Jordi speech.
+- **Ethical & legal considerations** — Voice cloning and conversational impersonation of a real, living public figure raises intellectual property and likeness rights concerns. YouTube auto-generated subtitles are subject to YouTube's Terms of Service; redistribution of derived transcripts may not be permitted. Coqui TTS (XTTS v2) has been discontinued by its maintainer — the upstream dependency carries a long-term maintenance risk.
+- **Other** — The dlib ERT landmark model (trained on iBUG 300-W) is mature and stable but older than MediaPipe Holistic/FaceMesh alternatives. No conversation logging or content moderation for generated outputs is implemented.
+
+### Summary Table
+
+| Audit Item | Claude's Assessment | Human Expert Assessment |
+|---|---|---|
+| Cost & resource minimization | Under $1/month for casual use. One-time $0.10 style extraction. STT/animation run locally at $0. | |
+| IT architecture | Clean offline pipeline + runtime separation. Four modes share core RAG + LLM layer. Pickled artifacts eliminate re-processing. | |
+| Code efficiency | TF-IDF pickled for fast cold-start. faster-whisper tiny/int8 is correct for real-time CPU STT. XTTS v2 latency on CPU is a documented known limitation. | |
+| Cybersecurity | API key in .env only. No PII collected. Content safety policy in system prompt. No output moderation log. | |
+| Readability & maintainability | Comprehensive Mermaid pipeline diagram. Fully reproducible 6-step setup. Mode trade-offs clearly documented. | |
+| AI / ML model adequacy | All model choices are appropriate and well-justified. TF-IDF RAG effectively grounds responses in real speech. | |
+| Ethical & legal considerations | Voice cloning of a real person raises IP/likeness rights issues. YouTube subtitle ToS must be reviewed. Coqui TTS is discontinued — upstream maintenance risk. | |
+| Other | dlib ERT model is stable but older than MediaPipe alternatives. No conversation logging or moderation for generated content. | |
