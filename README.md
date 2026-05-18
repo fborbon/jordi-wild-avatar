@@ -1,4 +1,4 @@
-# The Wild Project — Jordi Wild Avatar
+# Jordi Wild Avatar
 
 A conversational AI avatar of **Jordi Wild**, host of *The Wild Project* podcast, built entirely from his public podcast transcripts. The system extracts ~18 000 real Jordi speech turns from 381 YouTube subtitle files, indexes them with TF-IDF for Retrieval-Augmented Generation (RAG), and uses Claude Sonnet to generate responses grounded in his actual vocabulary, humor style, and conversation patterns. Available in four interaction modes: text chatbot, low-latency voice call (Microsoft Azure neural TTS), high-quality voice call with voice cloning (XTTS v2), and animated video call with real-time dlib face animation driven by audio amplitude.
 
