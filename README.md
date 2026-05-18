@@ -18,6 +18,7 @@ A conversational AI avatar of **Jordi Wild**, host of *The Wild Project* podcast
 6. [Project Structure](#project-structure)
 7. [Setup](#setup)
 8. [Hardware Notes](#hardware-notes)
+9. [Auditing](#auditing)
 
 ---
 
